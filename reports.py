@@ -137,10 +137,12 @@ def get_sample(reports):
     return pd.concat(filter(lambda data: not data.empty, vectors), ignore_index=True)
 
 # Получить целевой вектор
-def get_target_vector(data):
+""" def get_target_vector(data):
     keys = map(lambda a: f"P_{a + 1}" if a < PLAYER_CNT else "No", range(PLAYER_CNT + 1))
     values = np.zeros(PLAYER_CNT + 1)
 
+    return pd.DataFrame([values], columns=keys) """
+def get_target_vector(data):
     players = list(map(lambda a: {
                                     'part': data['Part'], 
                                     'num': data[f'Number_{a + 1}'], 
@@ -150,18 +152,19 @@ def get_target_vector(data):
     players_position = list(range(PLAYER_CNT))
     players_position.insert(0, PLAYER_CNT)
     
-    values[reduce(lambda re_position, position: coach.get_replace(position, re_position, players), players_position)] = 1
-
-    return pd.DataFrame([values], columns=keys)
+    return reduce(lambda re_position, position: coach.get_replace(position, re_position, players), players_position) + 1
 
 # Получить набор целевых векторов
-def get_target(sample):
-    return pd.concat(map(lambda row: get_target_vector(sample.iloc[row]), range(sample.shape[0])), ignore_index=True)
+def get_target(data):
+    new_data = copy(data)
+    new_data['Replace'] = list(map(lambda row: get_target_vector(data.iloc[row]), range(data.shape[0])))
+
+    return new_data
 
 # Записать выборку в файл
-def write_sample(sample, path):
+def write_sample(data, path):
     writer = pd.ExcelWriter(path, engine='openpyxl')
-    sample.to_excel(writer, sheet_name="sample", index=False)
+    data.to_excel(writer, sheet_name="sample", index=False)
     writer.save()
 
 # Прочить выборку из файла
