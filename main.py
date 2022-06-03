@@ -18,8 +18,11 @@ class Main:
 
         #print(sample)
         kneighbors = at.fit_by_kneighbors(sample)
-        mlp = at.fit_by_mlp(sample)
         logit = at.fit_by_logit(sample)
         svm = at.fit_by_svm(sample)
+        mlp = at.fit_by_mlp(sample)
+        rforest = at.fit_by_rforest(sample)
 
-        # write report
+        at.print_reports(kneighbors, logit, svm, mlp, rforest)
+        #at.print_reports(rforest)
+        #at.write_report_by_models(kneighbors, logit, svm, mlp)

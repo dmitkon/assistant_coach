@@ -143,16 +143,21 @@ def get_sample(reports):
 
     return pd.DataFrame([values], columns=keys) """
 def get_target_vector(data):
-    players = list(map(lambda a: {
-                                    'part': data['Part'], 
-                                    'num': data[f'Number_{a + 1}'], 
-                                    'ind': data[f'Ind_R_{a + 1}'], 
-                                    'eff': data[f'Eff_R_{a + 1}']}, range(PLAYER_CNT)))
+    players = list(map(lambda a: get_player_features(data, a + 1), range(PLAYER_CNT)))
 
     players_position = list(range(PLAYER_CNT))
     players_position.insert(0, PLAYER_CNT)
     
     return reduce(lambda re_position, position: coach.get_replace(position, re_position, players), players_position) + 1
+
+# Получить признаки игрока в выборке по позиции
+def get_player_features(data, position):
+    return {
+        'part': data['Part'], 
+        'num': data[f'Number_{position}'], 
+        'ind': data[f'Ind_R_{position}'], 
+        'eff': data[f'Eff_R_{position}']
+    }
 
 # Получить набор целевых векторов
 def get_target(data):
