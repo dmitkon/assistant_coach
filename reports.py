@@ -5,8 +5,6 @@ from copy import copy
 from functools import reduce
 import coach
 
-PLAYER_CNT = 6
-
 # Прочитать данные из файлов отчётов
 def read_reports(matches, parts, path):
     reports = []
@@ -103,14 +101,14 @@ def get_eff(row, data):
     return Decimal((pos*pos)/(tot*max_pos) if max_pos > 0 else pos/tot).quantize(Decimal('1.00'))
 
 # Получить вектор по отчёту для сета
-def get_vector(data, set_value):
+def get_vector(data, set_value, player_cnt):
     element = filter_by_values(data, {'Set': [set_value], 'Skill': ['Reception']})
 
     if not element.empty:
         keys = ['Part']
         values = [element['Part'].iloc[0]]
 
-        for i in range(PLAYER_CNT):
+        for i in range(player_cnt):
             if i < element.shape[0]:
                 keys.extend([f'Number_{i + 1}', f'Ind_R_{i + 1}', f'Eff_R_{i + 1}'])
                 values.extend([element['Number'].iloc[i], element['Ind.'].iloc[i], get_eff(i, element)])
@@ -125,14 +123,14 @@ def get_vector(data, set_value):
     return vector
 
 # Получить выборку
-def get_sample(reports):
+def get_sample(reports, player_cnt):
     get_keys = ['Part', 'Number', 'Last_name', 'Skill', 'Set', 'Ind.', 'Tot', '+', '#']
     fill_keys = ['Skill', 'Player']
     new_reports = get_without_team_data(get_by_keys(get_keys, get_split_players(get_fill_general_nan(fill_keys, reports))))
 
     vectors = []
     for set_value in range(5):
-        vectors.extend(apply_function_data(lambda data: get_vector(data, set_value + 1), new_reports))
+        vectors.extend(apply_function_data(lambda data: get_vector(data, set_value + 1, player_cnt), new_reports))
     
     return pd.concat(filter(lambda data: not data.empty, vectors), ignore_index=True)
 
@@ -142,10 +140,10 @@ def get_sample(reports):
     values = np.zeros(PLAYER_CNT + 1)
 
     return pd.DataFrame([values], columns=keys) """
-def get_target_vector(data):
-    players = list(map(lambda a: get_player_features(data, a + 1), range(PLAYER_CNT)))
+def get_target_vector(data, player_cnt):
+    players = list(map(lambda a: get_player_features(data, a + 1), range(player_cnt)))
 
-    players_position = [PLAYER_CNT] + list(range(PLAYER_CNT))
+    players_position = [player_cnt] + list(range(player_cnt))
     
     return reduce(lambda re_position, position: coach.get_replace(position, re_position, players), players_position) + 1
 
@@ -159,9 +157,9 @@ def get_player_features(data, position):
     }
 
 # Получить набор целевых векторов
-def get_target(data):
+def get_target(data, player_cnt):
     new_data = copy(data)
-    new_data['Replace'] = list(map(lambda row: get_target_vector(data.iloc[row]), range(data.shape[0])))
+    new_data['Replace'] = list(map(lambda row: get_target_vector(data.iloc[row], player_cnt), range(data.shape[0])))
 
     return new_data
 
