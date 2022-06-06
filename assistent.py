@@ -7,20 +7,30 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix
+import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 
 def split_sample(sample):
     return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=0.20, random_state=42)
 
-def get_scaler_X(sample_X):
+def get_scaler_X(X_sample):
     scaler = StandardScaler()
-    scaler.fit(sample_X)
+    scaler.fit(X_sample)
     
-    return scaler.transform(sample_X)
+    return scaler.transform(X_sample)
 
 def fit_by_alg(X_train, y_train, alg, parameters, cv=None):
-    clf = GridSearchCV(alg(), parameters, cv=cv)
+    average = 'weighted'
+    scoring = {
+        'accuracy': 'accuracy',
+        'precision': f'precision_{average}',
+        'recall': f'recall_{average}',
+        'f1': f'f1_{average}',
+    }
+
+    clf = GridSearchCV(alg(), parameters, cv=cv, scoring=scoring, refit='accuracy')
     clf.fit(X_train, y_train)
     
     return {
@@ -62,6 +72,7 @@ def fit_by_mlp(X_train, y_train):
 
 def fit_by_rforest(X_train, y_train):
     params = {
+        'random_state': [42],
         'n_estimators': [60, 80, 100, 120, 140, 160, 180, 200],
         'criterion': ['gini', 'entropy']
     }
@@ -72,10 +83,13 @@ def get_predict(model, vectors):
     return model.predict(vectors)
 
 def print_report(X_test, y_test, model):
+    predict = get_predict(model.get('clf').best_estimator_, X_test)
+
     print(model.get('name') + ':')
     print('best_score - ' + str(model.get('clf').best_score_))
     print('best_params - ' + str(model.get('clf').best_params_))
-    print('test -\n' + classification_report(y_test, get_predict(model.get('clf').best_estimator_, X_test)))
-
-def write_report_by_models(*models):
-    pass
+    print('test -\n' + classification_report(y_test, predict))
+    print('Confusion matix for "no replacement" class -')
+    print(pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
+                        columns=['pred_neg', 'pred_pos'],
+                        index=['neg', 'pos']))

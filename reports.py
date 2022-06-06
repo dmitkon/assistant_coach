@@ -13,7 +13,7 @@ def read_reports(matches, parts, path):
 
     for match in range(matches):
         for part in range(parts):
-            data = pd.read_excel(path + "M" + str(match + 1) + "P" + str(part + 1) + ".xls")
+            data = pd.read_excel(path + 'M' + str(match + 1) + 'P' + str(part + 1) + '.xls')
             data.rename(columns=dict(zip(list(data), list(data.iloc[3]))), inplace=True)
             data = data[4:data.shape[0] - 1]
             data['Part'] = [part + 1 for i in range(data.shape[0])]
@@ -88,7 +88,7 @@ def filter_by_values(data, filters):
 
 # Исмключить данные по команде
 def get_without_team_data(reports):
-    return apply_function_data(lambda data: data[data['Last_name'] != "Team"], reports)
+    return apply_function_data(lambda data: data[data['Last_name'] != 'Team'], reports)
 
 # Вычислить эффективность
 def get_eff(row, data):
@@ -100,7 +100,7 @@ def get_eff(row, data):
     tot = new_data['Tot'].iloc[row]
     max_pos = max(new_data['Pos'])
 
-    return Decimal((pos*pos)/(tot*max_pos) if max_pos > 0 else pos/tot).quantize(Decimal("1.00"))
+    return Decimal((pos*pos)/(tot*max_pos) if max_pos > 0 else pos/tot).quantize(Decimal('1.00'))
 
 # Получить вектор по отчёту для сета
 def get_vector(data, set_value):
@@ -145,8 +145,7 @@ def get_sample(reports):
 def get_target_vector(data):
     players = list(map(lambda a: get_player_features(data, a + 1), range(PLAYER_CNT)))
 
-    players_position = list(range(PLAYER_CNT))
-    players_position.insert(0, PLAYER_CNT)
+    players_position = [PLAYER_CNT] + list(range(PLAYER_CNT))
     
     return reduce(lambda re_position, position: coach.get_replace(position, re_position, players), players_position) + 1
 
@@ -169,9 +168,19 @@ def get_target(data):
 # Записать выборку в файл
 def write_sample(data, path):
     writer = pd.ExcelWriter(path, engine='openpyxl')
-    data.to_excel(writer, sheet_name="sample", index=False)
+    data.to_excel(writer, sheet_name='Sample', index=False)
     writer.save()
 
 # Прочить выборку из файла
 def read_sample(path):
     return pd.read_excel(path)
+
+# Подсчитать кол-во меток классов
+def get_class_cnt(data):
+    classes = range(1, data['Replace'].max() + 1)
+    df = pd.DataFrame()
+    
+    for label in classes:
+        df[label] = [data[data['Replace'] == label].shape[0]]
+
+    return df
