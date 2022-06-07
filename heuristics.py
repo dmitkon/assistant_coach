@@ -2,20 +2,33 @@ from random import random
 import pandas as pd
 from copy import copy
 
-def shift_sample(sample, player_cnt):
+def shift_sample(sample, shifts):
     vectors = []
     for row in range(sample.shape[0]):
-        permutation = sorted(list(range(1, player_cnt + 1)), key=lambda A: random())
-        vector = pd.DataFrame({'Part': [sample.iloc[row]['Part']]})
-        
-        for i, position in enumerate(permutation):
-            vector[f'Number_{i + 1}'] = sample.iloc[row][f'Number_{position}']
-            vector[f'Ind_R_{i + 1}'] = sample.iloc[row][f'Ind_R_{position}']
-            vector[f'Eff_R_{i + 1}'] = sample.iloc[row][f'Eff_R_{position}']
+        for shift in shifts:
+            vector = pd.DataFrame({'Part': [sample.iloc[row]['Part']]})
+            
+            for i, position in enumerate(shift):
+                vector[f'Number_{i + 1}'] = sample.iloc[row][f'Number_{position}']
+                vector[f'Ind_R_{i + 1}'] = sample.iloc[row][f'Ind_R_{position}']
+                vector[f'Eff_R_{i + 1}'] = sample.iloc[row][f'Eff_R_{position}']
 
-        vectors.append(vector)
+            vectors.append(vector)
 
     return pd.concat(vectors, ignore_index=True)
+
+def get_random_shift(player_cnt):
+    return [sorted(list(range(1, player_cnt + 1)), key=lambda A: random())]
+
+def get_cicle_shifts(player_cnt):
+    shifts = []
+    state = list(range(1, player_cnt + 1))
+    
+    for i, item in enumerate(state):
+        state = state[-1:] + state[:-1]
+        shifts.append(state)
+
+    return shifts
 
 def add_player_index(sample, player_cnt):
     players = set()
@@ -32,7 +45,7 @@ def add_player_index(sample, player_cnt):
         indexes = []
         
         for row in range(sample.shape[0]):
-            indexes.append(players.get(sample[f'Number_{i + 1}'][row]))
+            indexes.append(players.get(sample.iloc[row][f'Number_{i + 1}']))
 
         new_sample.insert(2 + i*4, f'Index_{i + 1}', indexes)
 
