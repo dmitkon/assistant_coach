@@ -13,7 +13,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 def split_sample(sample):
-    return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=0.20, random_state=42)
+    return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=0.33, random_state=42)
 
 def get_scaler_X(X_sample):
     scaler = StandardScaler()
@@ -40,7 +40,10 @@ def fit_by_alg(X_train, y_train, alg, parameters, cv=None):
 
 def fit_by_kneighbors(X_train, y_train):
     params = {
-        'n_neighbors': [3, 5, 9, 13]
+        'n_neighbors': [3, 5, 9, 13],
+        'p': [1, 2, 3, 4],
+        'metric': ['minkowski', 'chebyshev', 'cosine'],
+        'weights': ['uniform', 'distance']
     }
 
     return fit_by_alg(X_train, y_train, KNeighborsClassifier, params)
@@ -54,7 +57,7 @@ def fit_by_logit(X_train, y_train):
 
 def fit_by_svm(X_train, y_train):
     params = {
-        'C': [0.5, 1, 10, 15],
+        'C': [1, 5, 10, 15, 20],
         'kernel': ['linear', 'poly', 'rbf', 'sigmoid']
     }
 
@@ -65,7 +68,7 @@ def fit_by_mlp(X_train, y_train):
         'random_state': [42],
         'hidden_layer_sizes': [(10,), (15,), (18,), (10, 10), (15, 15), (18, 18)],
         #'solver': ['sgd', 'adam'],
-        #'max_iter': [50, 100, 150, 200]
+        'max_iter': [100, 150, 200]
     }
 
     return fit_by_alg(X_train, y_train, MLPClassifier, params, cv=5)
@@ -93,3 +96,32 @@ def print_report(X_test, y_test, model):
     print(pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
                         columns=['pred_neg', 'pred_pos'],
                         index=['neg', 'pos']))
+
+def write_report(X_test, y_test, model):
+    name = model.get('name')
+    f = open(f'fit_reports/{name}.txt', 'w')
+
+    predict = get_predict(model.get('clf').best_estimator_, X_test)
+
+    f.write(model.get('name') + ':' + '\n')
+    f.write('best_score - ' + str(model.get('clf').best_score_) + '\n')
+    f.write('best_params - ' + str(model.get('clf').best_params_) + '\n')
+    f.write('test -\n' + classification_report(y_test, predict) + '\n')
+    f.write('Confusion matix for "no replacement" class -' + '\n')
+    f.write(str(pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
+                        columns=['pred_neg', 'pred_pos'],
+                        index=['neg', 'pos'])))
+
+    f.close()
+    #predict = get_predict(model.get('clf').best_estimator_, X_test)
+
+    #writer = pd.ExcelWriter('fit_reports/report.xls', engine='openpyxl')
+
+    #report = classification_report(y_test, predict, output_dict=True)
+    
+
+    #pd.DataFrame(report).to_excel(writer, sheet_name='Report', index=False)
+    #pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
+    #                    columns=['pred_neg', 'pred_pos'],
+    #                    index=['neg', 'pos']).to_excel(writer, sheet_name='Matrix', index=False)
+    #writer.save()

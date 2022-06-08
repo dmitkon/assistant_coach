@@ -2,6 +2,7 @@ from random import random
 import pandas as pd
 from copy import copy
 
+# Пееремешать данные в векторах выборки
 def shift_sample(sample, shifts):
     vectors = []
     for row in range(sample.shape[0]):
@@ -17,9 +18,11 @@ def shift_sample(sample, shifts):
 
     return pd.concat(vectors, ignore_index=True)
 
+# Получить рандомную комбинацию для функции перемешивания
 def get_random_shift(player_cnt):
     return [sorted(list(range(1, player_cnt + 1)), key=lambda A: random())]
 
+# Получить циклические сдвиги для функции перемешивания
 def get_cicle_shifts(player_cnt):
     shifts = []
     state = list(range(1, player_cnt + 1))
@@ -30,6 +33,7 @@ def get_cicle_shifts(player_cnt):
 
     return shifts
 
+# Добавить Признак индекс игрока (альтернатива номеру)
 def add_player_index(sample, player_cnt):
     players = set()
     
@@ -51,9 +55,11 @@ def add_player_index(sample, player_cnt):
 
     return new_sample
 
+# Удалить признак
 def drop_features(sample, features):
     return sample.drop(columns=features)
 
+# Удалить номера игроков
 def drop_numbers(sample, player_cnt):
     new_sample = copy(sample)
     

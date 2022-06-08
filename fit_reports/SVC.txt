@@ -1,0 +1,21 @@
+SVC:
+best_score - 0.7697916666666667
+best_params - {'C': 10, 'kernel': 'rbf'}
+test -
+              precision    recall  f1-score   support
+
+           1       0.09      1.00      0.16         2
+           2       0.59      0.71      0.65        14
+           3       0.40      1.00      0.57         2
+           4       0.86      0.65      0.74        37
+           5       0.70      0.39      0.50        18
+           6       0.38      0.22      0.28        23
+
+    accuracy                           0.52        96
+   macro avg       0.50      0.66      0.48        96
+weighted avg       0.65      0.52      0.55        96
+
+Confusion matix for "no replacement" class -
+     pred_neg  pred_pos
+neg        65         8
+pos        18         5

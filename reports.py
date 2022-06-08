@@ -135,11 +135,6 @@ def get_sample(reports, player_cnt):
     return pd.concat(filter(lambda data: not data.empty, vectors), ignore_index=True)
 
 # Получить целевой вектор
-""" def get_target_vector(data):
-    keys = map(lambda a: f"P_{a + 1}" if a < PLAYER_CNT else "No", range(PLAYER_CNT + 1))
-    values = np.zeros(PLAYER_CNT + 1)
-
-    return pd.DataFrame([values], columns=keys) """
 def get_target_vector(data, player_cnt):
     players = list(map(lambda a: get_player_features(data, a + 1), range(player_cnt)))
 
