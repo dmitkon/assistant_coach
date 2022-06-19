@@ -158,22 +158,6 @@ def get_target(data, player_cnt):
 
     return new_data
 
-# Записать выборку в файл
-def write_sample(data, path):
-    writer = pd.ExcelWriter(path, engine='openpyxl')
-    data.to_excel(writer, sheet_name='Sample', index=False)
-    writer.save()
-
 # Прочить выборку из файла
 def read_sample(path):
     return pd.read_excel(path)
-
-# Подсчитать кол-во меток классов
-def get_class_cnt(target):
-    classes = range(1, target.max() + 1)
-    df = pd.DataFrame()
-    
-    for label in classes:
-        df[label] = [target[target == label].shape[0]]
-
-    return df

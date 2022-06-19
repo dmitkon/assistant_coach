@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+from decimal import Decimal
 
 def split_sample(sample):
     return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=0.33, random_state=42)
@@ -97,31 +98,50 @@ def print_report(X_test, y_test, model):
                         columns=['pred_neg', 'pred_pos'],
                         index=['neg', 'pos']))
 
-def write_report(X_test, y_test, model):
-    name = model.get('name')
-    f = open(f'fit_reports/{name}.txt', 'w')
-
-    predict = get_predict(model.get('clf').best_estimator_, X_test)
-
-    f.write(model.get('name') + ':' + '\n')
-    f.write('best_score - ' + str(model.get('clf').best_score_) + '\n')
-    f.write('best_params - ' + str(model.get('clf').best_params_) + '\n')
-    f.write('test -\n' + classification_report(y_test, predict) + '\n')
-    f.write('Confusion matix for "no replacement" class -' + '\n')
-    f.write(str(pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
-                        columns=['pred_neg', 'pred_pos'],
-                        index=['neg', 'pos'])))
-
-    f.close()
-    #predict = get_predict(model.get('clf').best_estimator_, X_test)
-
-    #writer = pd.ExcelWriter('fit_reports/report.xls', engine='openpyxl')
-
-    #report = classification_report(y_test, predict, output_dict=True)
+def get_best(model):
+    best_params = model.get('clf').best_params_
+    best_params['Best_score'] = model.get('clf').best_score_
     
+    best_params = dict(map(lambda a: (a[0], [a[1]]), zip(best_params.keys(), best_params.values())))
 
-    #pd.DataFrame(report).to_excel(writer, sheet_name='Report', index=False)
-    #pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
-    #                    columns=['pred_neg', 'pred_pos'],
-    #                    index=['neg', 'pos']).to_excel(writer, sheet_name='Matrix', index=False)
-    #writer.save()
+    return pd.DataFrame(best_params)
+
+def get_classes_report(X_test, y_test, model):
+    predict = get_predict(model.get('clf').best_estimator_, X_test)
+    
+    clf_report = classification_report(y_test, predict, output_dict=True)
+    categories = [key for key in clf_report]
+    metrics_names = [key for key in clf_report.get(categories[0])]
+    
+    report = {}
+    
+    for j, metric in enumerate(metrics_names):
+        metric_list = []
+        
+        for categ in categories:
+            if isinstance(clf_report.get(categ), dict):
+                metric_list.append(Decimal(clf_report.get(categ).get(metric)).quantize(Decimal('1.00')))
+            elif j == 0:
+                metric_list.append(Decimal(clf_report.get(categ)).quantize(Decimal('1.00')))
+            else:
+                metric_list.append(np.NaN)
+        report[metric] = metric_list
+
+    return pd.DataFrame(report)
+
+def get_nr_matrix(X_test, y_test, model):
+    predict = get_predict(model.get('clf').best_estimator_, X_test)
+    
+    return pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
+                        columns=['pred_neg', 'pred_pos'],
+                        index=['neg', 'pos'])
+
+# Подсчитать кол-во меток классов
+def get_class_cnt(target):
+    classes = range(1, target.max() + 1)
+    df = pd.DataFrame()
+    
+    for label in classes:
+        df[label] = [target[target == label].shape[0]]
+
+    return df
