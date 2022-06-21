@@ -7,10 +7,9 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix
+from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix, ConfusionMatrixDisplay
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 from decimal import Decimal
 
 def split_sample(sample):
@@ -110,8 +109,8 @@ def get_classes_report(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
     
     clf_report = classification_report(y_test, predict, output_dict=True)
-    categories = [key for key in clf_report]
-    metrics_names = [key for key in clf_report.get(categories[0])]
+    categories = list(clf_report)
+    metrics_names = list(clf_report.get(categories[0]))
     
     report = {}
     
@@ -120,21 +119,28 @@ def get_classes_report(X_test, y_test, model):
         
         for categ in categories:
             if isinstance(clf_report.get(categ), dict):
-                metric_list.append(Decimal(clf_report.get(categ).get(metric)).quantize(Decimal('1.00')))
+                metric_list.append(float(Decimal(clf_report.get(categ).get(metric)).quantize(Decimal('1.00'))))
             elif j == 0:
-                metric_list.append(Decimal(clf_report.get(categ)).quantize(Decimal('1.00')))
+                metric_list.append(float(Decimal(clf_report.get(categ)).quantize(Decimal('1.00'))))
             else:
                 metric_list.append(np.NaN)
         report[metric] = metric_list
 
-    return pd.DataFrame(report)
+    return pd.DataFrame(report, index=categories)
 
-def get_nr_matrix(X_test, y_test, model):
+def get_matrix_display(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
+
+    matrix = confusion_matrix(y_test, predict, labels=model.get('clf').classes_)
+
+    return ConfusionMatrixDisplay(confusion_matrix=matrix, display_labels=model.get('clf').classes_)
+
+def get_nr_matrix_display(X_test, y_test, model):
+    predict = get_predict(model.get('clf').best_estimator_, X_test)
+
+    matrix = multilabel_confusion_matrix(y_test, predict)[-1]
     
-    return pd.DataFrame(multilabel_confusion_matrix(y_test, predict)[-1],
-                        columns=['pred_neg', 'pred_pos'],
-                        index=['neg', 'pos'])
+    return ConfusionMatrixDisplay(confusion_matrix=matrix, display_labels=['Neg', 'Pos'])
 
 # Подсчитать кол-во меток классов
 def get_class_cnt(target):

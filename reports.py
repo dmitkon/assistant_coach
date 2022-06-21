@@ -157,7 +157,3 @@ def get_target(data, player_cnt):
     new_data['Replace'] = list(map(lambda row: get_target_vector(data.iloc[row], player_cnt), range(data.shape[0])))
 
     return new_data
-
-# Прочить выборку из файла
-def read_sample(path):
-    return pd.read_excel(path)
