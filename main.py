@@ -38,7 +38,7 @@ class Main:
                             mlp=at.fit_by_mlp, 
                             rforest=at.fit_by_rforest)
 
-        write_fit_reports(get_fit_reports(X_test, y_test, models))
+        write_fit_reports(get_fit_reports(X_test, y_test, models), get_labels_stat(y_train, y_test))
 
 # Проитерировать модели по ключам
 def models_iteration(models: dict, f, X, y) -> dict:
@@ -70,9 +70,19 @@ def get_fit_report(models, key, X, y):
 def get_fit_reports(X_test, y_test, models):
     return models_iteration(models, get_fit_report, X_test, y_test)
 
+# Получить статистику по меткам классов
+def get_labels_stat(y_train, y_test):
+    return {
+        'train': at.get_labels_cnt(y_train),
+        'test': at.get_labels_cnt(y_test)
+    }
+
 # Записать отчёт по обучению моделей
-def write_fit_reports(reports):
+def write_fit_reports(reports, labels_stat):
     writer = pd.ExcelWriter('fit_reports/report.xls', engine='openpyxl')
+
+    labels_stat.get('train').to_excel(writer, sheet_name='Train statistics', index=False)
+    labels_stat.get('test').to_excel(writer, sheet_name='Test statistics', index=False)
 
     f1_scores = pd.DataFrame()
     acc_train = []

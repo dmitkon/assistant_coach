@@ -143,7 +143,7 @@ def get_nr_matrix_display(X_test, y_test, model):
     return ConfusionMatrixDisplay(confusion_matrix=matrix, display_labels=['Neg', 'Pos'])
 
 # Подсчитать кол-во меток классов
-def get_class_cnt(target):
+def get_labels_cnt(target):
     classes = range(1, target.max() + 1)
     df = pd.DataFrame()
     
