@@ -12,15 +12,18 @@ import pandas as pd
 import numpy as np
 from decimal import Decimal
 
-def split_sample(sample):
-    return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=0.33, random_state=42)
+# Разбить выборку на тренировочную и тестовую
+def split_sample(sample, test_size):
+    return train_test_split(sample.drop(columns=['Replace']), sample['Replace'], test_size=test_size, random_state=42)
 
+# Масштабировать признаки
 def get_scaler_X(X_sample):
     scaler = StandardScaler()
     scaler.fit(X_sample)
     
     return scaler.transform(X_sample)
 
+# Обучить по алгоритму
 def fit_by_alg(X_train, y_train, alg, parameters, cv=None):
     average = 'weighted'
     scoring = {
@@ -38,6 +41,7 @@ def fit_by_alg(X_train, y_train, alg, parameters, cv=None):
             'clf': clf
     }
 
+# Обучить алгоритмом к-ближайших соседей
 def fit_by_kneighbors(X_train, y_train):
     params = {
         'n_neighbors': [3, 5, 9, 13],
@@ -48,6 +52,7 @@ def fit_by_kneighbors(X_train, y_train):
 
     return fit_by_alg(X_train, y_train, KNeighborsClassifier, params)
 
+# Обучить алгоритмом логистическая регрессия
 def fit_by_logit(X_train, y_train):
     params = {
         'C': [0.01, 0.1, 0.5, 1]
@@ -55,6 +60,7 @@ def fit_by_logit(X_train, y_train):
 
     return fit_by_alg(X_train, y_train, LogisticRegression, params, cv=5)
 
+# Обучить алгоритмом метод опорных векторов
 def fit_by_svm(X_train, y_train):
     params = {
         'C': [1, 5, 10, 15, 20],
@@ -63,16 +69,19 @@ def fit_by_svm(X_train, y_train):
 
     return fit_by_alg(X_train, y_train, SVC, params, cv=5)
 
+# Обучить алгоритмом многослойный персептрон
 def fit_by_mlp(X_train, y_train):
     params = {
         'random_state': [42],
         'hidden_layer_sizes': [(10,), (15,), (18,), (10, 10), (15, 15), (18, 18)],
         #'solver': ['sgd', 'adam'],
+        #'activation': ['logostic', 'tanh', 'relu'],
         'max_iter': [100, 150, 200]
     }
 
     return fit_by_alg(X_train, y_train, MLPClassifier, params, cv=5)
 
+# Обучить алгоритмом случайный лес
 def fit_by_rforest(X_train, y_train):
     params = {
         'random_state': [42],
@@ -82,9 +91,11 @@ def fit_by_rforest(X_train, y_train):
 
     return fit_by_alg(X_train, y_train, RandomForestClassifier, params, cv=5)
 
+# Получить результат
 def get_predict(model, vectors):
     return model.predict(vectors)
 
+# Вывести отчёт
 def print_report(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
 
@@ -97,6 +108,7 @@ def print_report(X_test, y_test, model):
                         columns=['pred_neg', 'pred_pos'],
                         index=['neg', 'pos']))
 
+# Получить лучшие параметры модели
 def get_best(model):
     best_params = model.get('clf').best_params_
     best_params['Best_score'] = model.get('clf').best_score_
@@ -105,6 +117,7 @@ def get_best(model):
 
     return pd.DataFrame(best_params)
 
+# Получить отчёт по классам
 def get_classes_report(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
     
@@ -128,6 +141,7 @@ def get_classes_report(X_test, y_test, model):
 
     return pd.DataFrame(report, index=categories)
 
+# Получить представление матрицы ошибок
 def get_matrix_display(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
 
@@ -135,6 +149,7 @@ def get_matrix_display(X_test, y_test, model):
 
     return ConfusionMatrixDisplay(confusion_matrix=matrix, display_labels=model.get('clf').classes_)
 
+# Получить представление матрицы ошибок для одного класса
 def get_nr_matrix_display(X_test, y_test, model):
     predict = get_predict(model.get('clf').best_estimator_, X_test)
 

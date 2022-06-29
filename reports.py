@@ -84,7 +84,7 @@ def filter_by_values(data, filters):
 
     return new_data
 
-# Исмключить данные по команде
+# Исключить данные по команде
 def get_without_team_data(reports):
     return apply_function_data(lambda data: data[data['Last_name'] != 'Team'], reports)
 

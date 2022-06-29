@@ -18,13 +18,13 @@ class Main:
         if input() != '1':
             reports = rp.read_reports(MATCHES, PARTS, 'reports/reception/')
             
-            sample = rp.get_target(rp.get_sample(reports, PLAYERS), PLAYERS)
-            #sample = rp.get_target(hr.shift_sample(rp.get_sample(reports, PLAYERS), hr.get_random_shift(PLAYERS)), PLAYERS)
+            #sample = rp.get_target(rp.get_sample(reports, PLAYERS), PLAYERS)
+            sample = rp.get_target(hr.shift_sample(rp.get_sample(reports, PLAYERS), hr.get_random_shift(PLAYERS)), PLAYERS)
             write_sample(sample, 'sample/sample.xls')
         else:
             sample = read_sample('sample/sample.xls')
 
-        X_train, X_test, y_train, y_test = at.split_sample(sample)
+        X_train, X_test, y_train, y_test = at.split_sample(sample, 0.33)
 
         #X_train['Replace'] = y_train
         #X_train = rp.get_target(hr.shift_sample(X_train, hr.get_cicle_shifts(PLAYERS)), PLAYERS)
